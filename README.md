@@ -1,0 +1,3 @@
+# oforma
+
+cargo run
