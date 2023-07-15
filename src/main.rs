@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::utils::Uuid;
+use bevy_mod_outline::*;
 use bevy::window::WindowMode;
 use bevy_atmosphere::prelude::*;
 use bevy_mod_picking::prelude::*;
@@ -21,6 +22,8 @@ fn main() {
         .add_plugin(AtmospherePlugin)
         .add_plugin(InfiniteGridPlugin)
         .add_plugin(TransformGizmoPlugin::default())
+        .add_plugin(OutlinePlugin)
+
         .add_startup_system(setup)
         .add_system(gizmo_camera_movement)
         .add_system(on_escape_pressed)
@@ -33,6 +36,19 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+
+    let outline = OutlineBundle {
+        outline: OutlineVolume {
+            visible: false,
+            colour: Color::ORANGE,
+            width: 6.0,
+        },
+        stencil: OutlineStencil {
+            offset: 3.0,
+            ..default()
+        },
+        ..default()
+    };
 
     commands.spawn(InfiniteGridBundle {
         grid: InfiniteGrid {
@@ -51,7 +67,8 @@ fn setup(
         PickableBundle::default(),    // <- Makes the mesh pickable.
         RaycastPickTarget::default(), // <- Needed for the raycast backend.
         bevy_transform_gizmo::GizmoTransformable,
-    ));
+    )).insert(outline.clone());
+
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
@@ -62,7 +79,7 @@ fn setup(
         PickableBundle::default(),    // <- Makes the mesh pickable.
         RaycastPickTarget::default(), // <- Needed for the raycast backend.
         bevy_transform_gizmo::GizmoTransformable,
-    ));
+    )).insert(outline.clone());
 
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
@@ -89,26 +106,31 @@ fn setup(
 
 // if gizmo active, disable camera movement
 fn gizmo_camera_movement(
-    mut gizmo_query: Query<(&bevy_transform_gizmo::TransformGizmo, &Visibility)>,
+    mut gizmo_query: Query<(&bevy_transform_gizmo::TransformGizmo, & Interaction)>,
+    mut outline_query: Query<(&mut OutlineVolume)>,
     mut query: Query<&mut PanOrbitCamera>,
 ) {
-    for (_transform, visibility) in gizmo_query.iter_mut() {
-        match visibility {
-            Visibility::Visible => {
-                for mut camera in query.iter_mut() {
-                    camera.enabled = false;
-                }
-            },
-            Visibility::Inherited => {
-                for mut camera in query.iter_mut() {
-                    camera.enabled = false;
-                }
-            },
-            _ => {
+    for (_transformGizmo, interaction) in gizmo_query.iter_mut() {
+        match interaction {
+            Interaction::None => {
                 for mut camera in query.iter_mut() {
                     camera.enabled = true;
                 }
+
+                for mut outline in outline_query.iter_mut() {
+                    outline.visible = false;
+                }
+
             }
+            _ => {
+                for mut camera in query.iter_mut() {
+                    camera.enabled = false;
+                }
+
+                for mut outline in outline_query.iter_mut() {
+                    outline.visible = true;
+                }
+            },
         }
     }
 }

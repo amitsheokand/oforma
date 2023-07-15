@@ -13,6 +13,7 @@ bevy_transform_gizmo = "0.7.0"
 bevy_atmosphere = "0.6.0"
 bevy_prototype_lyon = "0.8.0"
 bevy_infinite_grid =  "0.7.0"
+bevy_mod_outline = "0.4"
 
 
 
