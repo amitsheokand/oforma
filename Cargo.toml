@@ -14,7 +14,10 @@ bevy_atmosphere = "0.6.0"
 bevy_prototype_lyon = "0.8.0"
 bevy_infinite_grid =  "0.7.0"
 bevy_mod_outline = "0.4"
+bezier-rs = "0.2.0"
 
+#noise = "0.8"
+#colorgrad = "0.7.0"
 
 
 [workspace]
