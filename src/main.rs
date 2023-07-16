@@ -25,7 +25,7 @@ fn main() {
         .add_plugin(OutlinePlugin)
 
         .add_startup_system(setup)
-        .add_system(gizmo_camera_movement)
+        .add_system(manage_camera_movement)
         .add_system(on_escape_pressed)
         .run();
 }
@@ -105,26 +105,25 @@ fn setup(
 }
 
 // if gizmo active, disable camera movement
-fn gizmo_camera_movement(
+fn manage_camera_movement(
     mut gizmo_query: Query<(&bevy_transform_gizmo::TransformGizmo, & Interaction)>,
-    mut outline_query: Query<(&mut OutlineVolume)>,
+    mut outline_query: Query<&mut OutlineVolume>,
     mut query: Query<&mut PanOrbitCamera>,
 ) {
-    for (_transformGizmo, interaction) in gizmo_query.iter_mut() {
+    for (_transform_gizmo, interaction) in gizmo_query.iter_mut() {
         match interaction {
             Interaction::None => {
-                for mut camera in query.iter_mut() {
-                    camera.enabled = true;
+                for mut orb_camera in query.iter_mut() {
+                    orb_camera.enabled = true;
                 }
 
                 for mut outline in outline_query.iter_mut() {
                     outline.visible = false;
                 }
-
             }
             _ => {
-                for mut camera in query.iter_mut() {
-                    camera.enabled = false;
+                for mut orb_camera in query.iter_mut() {
+                    orb_camera.enabled = false;
                 }
 
                 for mut outline in outline_query.iter_mut() {
@@ -136,8 +135,7 @@ fn gizmo_camera_movement(
 }
 
 // if escape pressed, unset selection, which will disable gizmo
-fn on_escape_pressed(
-    keyboard_input: Res<Input<KeyCode>>,
+fn on_escape_pressed(keyboard_input: Res<Input<KeyCode>>,
     mut deselections: EventWriter<PointerEvent<Deselect>>,
     pointers: Query<&PointerLocation>,
     selectables: Query<(Entity, &PickSelection)>,
