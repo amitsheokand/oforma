@@ -151,3 +151,11 @@ fn on_escape_pressed(keyboard_input: Res<Input<KeyCode>>,
         }
     }
 }
+//Change Camera projection on pressing TAB
+fn toggle_camera_projection(keyboard_input: Res<Input<KeyCode>>,
+    mut camera_query: Query<&mut PanOrbitCamera>,
+){
+    if keyboard_input.just_pressed(KeyCode::TAB) {
+    
+    
+}}
