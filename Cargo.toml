@@ -10,7 +10,7 @@ bevy = { version = "0.10.1", features = ["dynamic_linking"] } # "dynamic_linking
 bevy_mod_picking = "0.13.0"
 bevy_panorbit_camera = "0.5.2"
 bevy_transform_gizmo = "0.7.0"
-bevy_atmosphere = "0.6.0"
+bevy_atmosphere = "0.7.0"
 bevy_prototype_lyon = "0.8.0"
 bevy_infinite_grid =  "0.7.0"
 bevy_mod_outline = "0.4"
