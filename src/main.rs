@@ -19,7 +19,7 @@ fn main() {
         }))
         .add_plugins(DefaultPickingPlugins)
         .add_plugin(PanOrbitCameraPlugin)
-        // .add_plugin(AtmospherePlugin)
+        .add_plugin(AtmospherePlugin)
         .add_plugin(InfiniteGridPlugin)
         .add_plugin(TransformGizmoPlugin::default())
         .add_plugin(OutlinePlugin)
@@ -104,7 +104,7 @@ fn setup(
             },
             RaycastPickCamera::default(), // <- Enable picking for this camera
             PanOrbitCamera::default(),
-            // AtmosphereCamera::default(),
+            AtmosphereCamera::default(),
             bevy_transform_gizmo::GizmoPickSource::default(),
             PrimaryCamera,
         ))
