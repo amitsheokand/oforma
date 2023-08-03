@@ -1,7 +1,7 @@
 use bevy::utils::Uuid;
 use bevy::window::WindowMode;
 use bevy::{prelude::*, render::camera::ScalingMode, window::PrimaryWindow};
-use bevy_atmosphere::prelude::*;
+// use bevy_atmosphere::prelude::*;
 use bevy_infinite_grid::{GridShadowCamera, InfiniteGrid, InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_mod_outline::*;
 use bevy_mod_picking::prelude::*;
@@ -19,7 +19,7 @@ fn main() {
         }))
         .add_plugins(DefaultPickingPlugins)
         .add_plugin(PanOrbitCameraPlugin)
-        .add_plugin(AtmospherePlugin)
+        // .add_plugin(AtmospherePlugin)
         .add_plugin(InfiniteGridPlugin)
         .add_plugin(TransformGizmoPlugin::default())
         .add_plugin(OutlinePlugin)
@@ -27,29 +27,21 @@ fn main() {
         .add_system(manage_camera_movement)
         .add_system(on_escape_pressed)
         .add_system(toggle_camera_projection)
+        .add_system(on_object_selected)
+        .add_startup_system(show_title)
         .run();
 }
+
+
 #[derive(Component)]
 struct PrimaryCamera;
+
 /// set up a simple 3D scene
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let outline = OutlineBundle {
-        outline: OutlineVolume {
-            visible: false,
-            colour: Color::ORANGE,
-            width: 6.0,
-        },
-        stencil: OutlineStencil {
-            offset: 3.0,
-            ..default()
-        },
-        ..default()
-    };
-
     commands.spawn(InfiniteGridBundle {
         grid: InfiniteGrid {
             // shadow_color: None,
@@ -68,8 +60,7 @@ fn setup(
             PickableBundle::default(),    // <- Makes the mesh pickable.
             RaycastPickTarget::default(), // <- Needed for the raycast backend.
             bevy_transform_gizmo::GizmoTransformable,
-        ))
-        .insert(outline.clone());
+        ));
 
     commands
         .spawn((
@@ -82,8 +73,7 @@ fn setup(
             PickableBundle::default(),    // <- Makes the mesh pickable.
             RaycastPickTarget::default(), // <- Needed for the raycast backend.
             bevy_transform_gizmo::GizmoTransformable,
-        ))
-        .insert(outline.clone());
+        ));
 
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
@@ -104,17 +94,45 @@ fn setup(
             },
             RaycastPickCamera::default(), // <- Enable picking for this camera
             PanOrbitCamera::default(),
-            AtmosphereCamera::default(),
+            // AtmosphereCamera::default(),
             bevy_transform_gizmo::GizmoPickSource::default(),
             PrimaryCamera,
         ))
         .insert(GridShadowCamera);
 }
 
+
+fn on_object_selected(
+    mut commands: Commands,
+    mut selections: EventReader<PointerEvent<Select>>,
+    mut deselection: EventReader<PointerEvent<Deselect>>,
+)
+    {
+        let outline = OutlineBundle {
+            outline: OutlineVolume {
+                visible: true,
+                colour: Color::ORANGE,
+                width: 6.0,
+            },
+            stencil: OutlineStencil {
+                offset: 3.0,
+                ..default()
+            },
+            ..default()
+        };
+
+        for s in selections.iter() {
+            commands.entity(s.target).insert(outline.clone());
+        }
+
+        for d in deselection.iter() {
+            commands.entity(d.target).remove::<OutlineVolume>();
+        }
+    }
+
 // if gizmo active, disable camera movement
 fn manage_camera_movement(
     mut gizmo_query: Query<(&bevy_transform_gizmo::TransformGizmo, &Interaction)>,
-    mut outline_query: Query<&mut OutlineVolume>,
     mut query: Query<&mut PanOrbitCamera>,
 ) {
     for (_transform_gizmo, interaction) in gizmo_query.iter_mut() {
@@ -123,18 +141,10 @@ fn manage_camera_movement(
                 for mut orb_camera in query.iter_mut() {
                     orb_camera.enabled = true;
                 }
-
-                for mut outline in outline_query.iter_mut() {
-                    outline.visible = false;
-                }
             }
             _ => {
                 for mut orb_camera in query.iter_mut() {
                     orb_camera.enabled = false;
-                }
-
-                for mut outline in outline_query.iter_mut() {
-                    outline.visible = true;
                 }
             }
         }
@@ -211,4 +221,23 @@ fn toggle_camera_projection(
         // println!("After projection is {:?}", *&new_pr);
         *_projection = new_pr;
     }
+}
+
+
+fn show_title(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn(
+        TextBundle::from_section(
+            "Konark Editor!",
+            TextStyle {
+                font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                font_size: 30.0,
+                color: Color::WHITE,
+            },
+        )
+        .with_style(Style {
+            align_self: AlignSelf::FlexStart,
+            align_content : AlignContent::Center,
+            ..default()
+        }),
+    );
 }
