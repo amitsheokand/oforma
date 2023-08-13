@@ -20,6 +20,8 @@ impl Plugin for FileMenuPlugin {
                 interact_with_load_button,
                 interact_with_undo_button,
                 interact_with_redo_button,
-                interact_with_switch_projection_button));
+                interact_with_switch_projection_button,
+                interact_with_draw_room_button,
+                interact_with_draw_wall_button));
     }
 }

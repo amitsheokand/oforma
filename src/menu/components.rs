@@ -7,6 +7,15 @@ pub struct TransformMenu {}
 pub struct FileMenu {}
 
 #[derive(Component)]
+pub struct ToolMenu {}
+
+#[derive(Component)]
+pub struct DrawWallButton {}
+
+#[derive(Component)]
+pub struct DrawRoomButton {}
+
+#[derive(Component)]
 pub struct SaveButton {}
 
 #[derive(Component)]

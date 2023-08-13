@@ -5,7 +5,8 @@ use crate::menu::styles::*;
 
 pub fn spawn_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
     build_file_menu(&mut commands, &asset_server);
-    build_transform_menu(&mut commands, &asset_server);
+   // build_transform_menu(&mut commands, &asset_server);
+    build_tools_menu(&mut commands, &asset_server);
 }
 
 pub fn despawn_file_menu(mut commands: Commands, file_menu_query: Query<Entity, With<FileMenu>>) {
@@ -105,3 +106,64 @@ pub fn build_transform_menu(commands: &mut Commands, asset_server: &Res<AssetSer
  .id();
     transform_menu_entity
 }       
+pub fn build_tools_menu(commands: &mut Commands, asset_server: &Res<AssetServer>) -> Entity {
+    let tools_menu_entity = commands
+        .spawn((
+            NodeBundle {
+                style: TOOL_MENU_STYLE,
+                ..default()
+            },
+            ToolMenu {},
+        ))
+        .with_children(|parent| {
+            // === Draw Wall Button ===
+            parent
+                .spawn((
+                    ButtonBundle {
+                        style: BUTTON_STYLE,
+                        background_color: NORMAL_BUTTON_COLOR.into(),
+                        ..default()
+                    },
+                    DrawRoomButton {},
+                ))
+                .with_children(|parent| {
+                    parent.spawn(TextBundle {
+                        text: Text {
+                            sections: vec![TextSection::new(
+                                "Draw Room",
+                                get_button_text_style(&asset_server),
+                            )],
+                            alignment: TextAlignment::Center,
+                            ..default()
+                        },
+                        ..default()
+                    });
+                });
+                 // === Draw Wall Button ===
+            parent
+            .spawn((
+                ButtonBundle {
+                    style: BUTTON_STYLE,
+                    background_color: NORMAL_BUTTON_COLOR.into(),
+                    ..default()
+                },
+                DrawWallButton {},
+            ))
+            .with_children(|parent| {
+                parent.spawn(TextBundle {
+                    text: Text {
+                        sections: vec![TextSection::new(
+                            "Draw Wall",
+                            get_button_text_style(&asset_server),
+                        )],
+                        alignment: TextAlignment::Center,
+                        ..default()
+                    },
+                    ..default()
+                });
+            });
+        })
+        .id();
+
+    tools_menu_entity
+}

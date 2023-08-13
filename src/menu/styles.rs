@@ -13,6 +13,21 @@ pub const FILE_MENU_STYLE: Style = Style {
     gap: Size::new(Val::Px(8.0), Val::Px(8.0)),
     ..Style::DEFAULT
 };
+pub const TOOL_MENU_STYLE: Style = Style {
+    display: Display::Flex,
+    flex_direction: FlexDirection::Column,
+    padding: UiRect {
+        top: Val::Percent(7.5),
+        left: Val::Percent(-28.0),
+        right: Val::Percent(0.0),
+        bottom: Val::Percent(0.0),
+    },
+    justify_content: JustifyContent::Start,
+    align_items: AlignItems::Start,
+    size: Size::new(Val::Percent(20.0), Val::Percent(30.0)),
+    gap: Size::new(Val::Px(8.0), Val::Px(8.0)),
+    ..Style::DEFAULT
+};
 pub const TRANSFORM_MENU_STYLE: Style = Style {
     display: Display::Flex,
     flex_direction: FlexDirection::Row,
@@ -26,7 +41,7 @@ pub const TRANSFORM_MENU_STYLE: Style = Style {
 pub const BUTTON_STYLE: Style = Style {
     justify_content: JustifyContent::Center,
     align_items: AlignItems::Center,
-    size: Size::new(Val::Px(200.0), Val::Px(40.0)),
+    size: Size::new(Val::Px(150.0), Val::Px(40.0)),
     ..Style::DEFAULT
 };
 

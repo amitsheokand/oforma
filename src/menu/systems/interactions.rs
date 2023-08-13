@@ -16,7 +16,6 @@ pub fn interact_with_save_button(
             Interaction::Clicked => {
                 *background_color = PRESSED_BUTTON_COLOR.into();
                 println!("Save Button Clicked");
-               // app_state_next_state.set(AppState::Game);
             }
             Interaction::Hovered => {
                 *background_color = HOVERED_BUTTON_COLOR.into();
@@ -40,7 +39,6 @@ pub fn interact_with_load_button(
             Interaction::Clicked => {
                 *background_color = PRESSED_BUTTON_COLOR.into();
                 println!("Load Button Clicked");
-                //app_exit_event_writer.send(AppExit);
             }
             Interaction::Hovered => {
                 *background_color = HOVERED_BUTTON_COLOR.into();
@@ -62,7 +60,6 @@ pub fn interact_with_undo_button(
             Interaction::Clicked => {
                 *background_color = PRESSED_BUTTON_COLOR.into();
                 println!("Undo Button Clicked");
-               // app_state_next_state.set(AppState::Game);
             }
             Interaction::Hovered => {
                 *background_color = HOVERED_BUTTON_COLOR.into();
@@ -84,7 +81,6 @@ pub fn interact_with_redo_button(
             Interaction::Clicked => {
                 *background_color = PRESSED_BUTTON_COLOR.into();
                 println!("Redo Button Clicked");
-               // app_state_next_state.set(AppState::Game);
             }
             Interaction::Hovered => {
                 *background_color = HOVERED_BUTTON_COLOR.into();
@@ -108,7 +104,6 @@ pub fn interact_with_switch_projection_button(
                 *background_color = PRESSED_BUTTON_COLOR.into();
                 println!("Switch Projection Button Clicked");
                 toggle_projection_event_writer.send(toggle_projection {});
-               // app_state_next_state.set(AppState::Game);
             }
             Interaction::Hovered => {
                 *background_color = HOVERED_BUTTON_COLOR.into();
@@ -119,3 +114,43 @@ pub fn interact_with_switch_projection_button(
         }
     }
 }
+pub fn interact_with_draw_wall_button(
+    mut button_query: Query<
+        (&Interaction, &mut BackgroundColor),
+        (Changed<Interaction>, With<DrawWallButton>),
+    >
+) {
+    if let Ok((interaction, mut background_color)) = button_query.get_single_mut() {
+        match *interaction {
+            Interaction::Clicked => {
+                *background_color = PRESSED_BUTTON_COLOR.into();
+                println!("Draw Wall Button Clicked");
+            }
+            Interaction::Hovered => {
+                *background_color = HOVERED_BUTTON_COLOR.into();
+            }
+            Interaction::None => {
+                *background_color = NORMAL_BUTTON_COLOR.into();
+            }
+        }
+}}
+pub fn interact_with_draw_room_button(
+    mut button_query: Query<
+        (&Interaction, &mut BackgroundColor),
+        (Changed<Interaction>, With<DrawRoomButton>),
+    >
+) {
+    if let Ok((interaction, mut background_color)) = button_query.get_single_mut() {
+        match *interaction {
+            Interaction::Clicked => {
+                *background_color = PRESSED_BUTTON_COLOR.into();
+                println!("Draw Room Button Clicked");
+            }
+            Interaction::Hovered => {
+                *background_color = HOVERED_BUTTON_COLOR.into();
+            }
+            Interaction::None => {
+                *background_color = NORMAL_BUTTON_COLOR.into();
+            }
+        }
+}}
