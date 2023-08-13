@@ -1,3 +1,4 @@
+mod menu;
 use bevy::utils::Uuid;
 use bevy::window::WindowMode;
 use bevy::{prelude::*, render::camera::ScalingMode, window::PrimaryWindow};
@@ -7,6 +8,7 @@ use bevy_mod_outline::*;
 use bevy_mod_picking::prelude::*;
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use bevy_transform_gizmo::TransformGizmoPlugin;
+use menu::FileMenuPlugin;
 
 fn main() {
     App::new()
@@ -17,6 +19,8 @@ fn main() {
             }),
             ..default()
         }))
+        .add_event::<toggle_projection>()
+        .add_plugin(FileMenuPlugin)
         .add_plugins(DefaultPickingPlugins)
         .add_plugin(PanOrbitCameraPlugin)
         // .add_plugin(AtmospherePlugin)
@@ -31,6 +35,9 @@ fn main() {
 }
 #[derive(Component)]
 struct PrimaryCamera;
+#[derive(Component)]
+pub struct toggle_projection;
+
 /// set up a simple 3D scene
 fn setup(
     mut commands: Commands,
@@ -172,8 +179,10 @@ fn toggle_camera_projection(
     keyboard_input: Res<Input<KeyCode>>,
     window_query: Query<&Window, With<PrimaryWindow>>,
     mut camera_query: Query<(&mut Projection, With<PrimaryCamera>)>,
+    mut toggle_projection_event_reader: EventReader<toggle_projection>
 ) {
-    if keyboard_input.just_pressed(KeyCode::Tab) {
+    //if keyboard_input.just_pressed(KeyCode::Tab) 
+    for event in toggle_projection_event_reader.iter(){
         let _new_ortho_projection = Projection::Orthographic(OrthographicProjection {
             scale: 3.0,
             scaling_mode: ScalingMode::FixedVertical(2.0),
