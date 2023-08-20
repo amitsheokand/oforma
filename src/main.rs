@@ -1,4 +1,6 @@
 mod menu;
+mod input;
+
 use bevy::utils::Uuid;
 use bevy::window::WindowMode;
 use bevy::{prelude::*, render::camera::ScalingMode, window::PrimaryWindow};
@@ -9,6 +11,7 @@ use bevy_mod_picking::prelude::*;
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use bevy_transform_gizmo::TransformGizmoPlugin;
 use menu::FileMenuPlugin;
+use input::inputs;
 
 fn main() {
     App::new()
@@ -21,6 +24,7 @@ fn main() {
         }))
         .add_event::<toggle_projection>()
         .add_plugin(FileMenuPlugin)
+        .add_plugin(inputs::InputPlugin) 
         .add_plugins(DefaultPickingPlugins)
         .add_plugin(PanOrbitCameraPlugin)
         // .add_plugin(AtmospherePlugin)
