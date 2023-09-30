@@ -13,16 +13,8 @@ use bevy_mesh_drawing::prelude::{
 };
 use bevy_mod_picking::PickableBundle;
 
-enum State {
-    Edit,
-    Create,
-    None,
-}
 
 fn main() {
-
-    let appState = State::None;
-
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
