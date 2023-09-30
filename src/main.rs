@@ -6,9 +6,23 @@ use bevy_infinite_grid::{GridShadowCamera, InfiniteGrid, InfiniteGridBundle, Inf
 use bevy_mod_outline::*;
 use bevy_mod_picking::prelude::*;
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
-use bevy_transform_gizmo::TransformGizmoPlugin;
+use bevy_transform_gizmo::{TransformGizmo, TransformGizmoInteraction, TransformGizmoPlugin};
+use bevy_mesh_drawing::prelude::{
+    Canvas, MeshDrawingCamera, MeshDrawingPlugin, MeshDrawingPluginInputBinds,
+    MeshDrawingPluginSettings, PolygonalMesh,
+};
+use bevy_mod_picking::PickableBundle;
+
+enum State {
+    Edit,
+    Create,
+    None,
+}
 
 fn main() {
+
+    let appState = State::None;
+
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
@@ -17,16 +31,28 @@ fn main() {
             }),
             ..default()
         }))
-        .add_plugins(DefaultPickingPlugins)
-        .add_plugin(PanOrbitCameraPlugin)
-        // .add_plugin(AtmospherePlugin)
-        .add_plugin(InfiniteGridPlugin)
-        .add_plugin(TransformGizmoPlugin::default())
-        .add_plugin(OutlinePlugin)
+        .add_plugins(PanOrbitCameraPlugin)
+        .add_plugins(AtmospherePlugin)
+        .add_plugins(InfiniteGridPlugin)
+        .add_plugins(TransformGizmoPlugin::default())
+        .add_plugins(OutlinePlugin)
         .add_startup_system(setup)
         .add_system(manage_camera_movement)
         .add_system(on_escape_pressed)
         .add_system(toggle_camera_projection)
+        .add_plugins(MeshDrawingPlugin)
+        .insert_resource(MeshDrawingPluginSettings {
+            extrude_size: 2.0, // config extrude height
+            // config input binds...
+            input_binds: MeshDrawingPluginInputBinds {
+                edit_mode_switch_key: KeyCode::Key1, // config key to switch to edit mode
+                create_mode_switch_key: KeyCode::Key2, // config key to switch to create mode
+                ..default()
+            },
+            ..default()
+        })
+        .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
+        .add_systems(Update, handle_polygonal_mesh_add)
         .run();
 }
 #[derive(Component)]
@@ -58,32 +84,46 @@ fn setup(
         ..Default::default()
     });
 
-    commands
-        .spawn((
-            PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Plane::from_size(5.0))),
-                material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
-                ..Default::default()
-            },
-            PickableBundle::default(),    // <- Makes the mesh pickable.
-            RaycastPickTarget::default(), // <- Needed for the raycast backend.
-            bevy_transform_gizmo::GizmoTransformable,
-        ))
-        .insert(outline.clone());
+    // Ground canvas
+    commands.spawn((
+        Name::new("Ground Canvas"),
+        PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Plane {
+                size: 50.0,
+                ..default()
+            })),
+            material: materials.add(Color::rgba(0.3, 0.5, 0.3, 0.0).into()),
+            ..default()
+        },
+        Canvas, // Mark this entity to allow drawing on it.
+    ));
 
-    commands
-        .spawn((
-            PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-                material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-                transform: Transform::from_xyz(0.0, 0.5, 0.0),
-                ..Default::default()
-            },
-            PickableBundle::default(),    // <- Makes the mesh pickable.
-            RaycastPickTarget::default(), // <- Needed for the raycast backend.
-            bevy_transform_gizmo::GizmoTransformable,
-        ))
-        .insert(outline.clone());
+    // commands
+    //     .spawn((
+    //         PbrBundle {
+    //             mesh: meshes.add(Mesh::from(shape::Plane::from_size(5.0))),
+    //             material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
+    //             ..Default::default()
+    //         },
+    //         PickableBundle::default(),    // <- Makes the mesh pickable.
+    //         RaycastPickTarget::default(), // <- Needed for the raycast backend.
+    //         bevy_transform_gizmo::GizmoTransformable,
+    //     ))
+    //     .insert(outline.clone());
+
+    // commands
+    //     .spawn((
+    //         PbrBundle {
+    //             mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+    //             material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+    //             transform: Transform::from_xyz(0.0, 0.5, 0.0),
+    //             ..Default::default()
+    //         },
+    //         PickableBundle::default(),    // <- Makes the mesh pickable.
+    //         RaycastPickTarget::default(), // <- Needed for the raycast backend.
+    //         bevy_transform_gizmo::GizmoTransformable,
+    //     ))
+    //     .insert(outline.clone());
 
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
@@ -104,35 +144,35 @@ fn setup(
             },
             RaycastPickCamera::default(), // <- Enable picking for this camera
             PanOrbitCamera::default(),
-            // AtmosphereCamera::default(),
+            AtmosphereCamera::default(),
             bevy_transform_gizmo::GizmoPickSource::default(),
             PrimaryCamera,
+            MeshDrawingCamera, // Mark camera for use with drawing.
         ))
         .insert(GridShadowCamera);
+
 }
 
-// if gizmo active, disable camera movement
+
 fn manage_camera_movement(
-    mut gizmo_query: Query<(&bevy_transform_gizmo::TransformGizmo, &Interaction)>,
+    mut gizmo_query: Query<(&PickingInteraction), With<bevy_transform_gizmo::TransformGizmo>>,
     mut outline_query: Query<&mut OutlineVolume>,
-    mut query: Query<&mut PanOrbitCamera>,
+    mut cam_query: Query<&mut PanOrbitCamera>,
 ) {
-    for (_transform_gizmo, interaction) in gizmo_query.iter_mut() {
+    for interaction in &mut gizmo_query.iter_mut() {
         match interaction {
-            Interaction::None => {
-                for mut orb_camera in query.iter_mut() {
+            PickingInteraction::None => {
+                for mut orb_camera in cam_query.iter_mut() {
                     orb_camera.enabled = true;
                 }
-
                 for mut outline in outline_query.iter_mut() {
                     outline.visible = false;
                 }
             }
             _ => {
-                for mut orb_camera in query.iter_mut() {
+                for mut orb_camera in cam_query.iter_mut() {
                     orb_camera.enabled = false;
                 }
-
                 for mut outline in outline_query.iter_mut() {
                     outline.visible = true;
                 }
@@ -144,7 +184,7 @@ fn manage_camera_movement(
 // if escape pressed, unset selection, which will disable gizmo
 fn on_escape_pressed(
     keyboard_input: Res<Input<KeyCode>>,
-    mut deselections: EventWriter<PointerEvent<Deselect>>,
+    mut deselections: EventWriter<Pointer<Deselect>>,
     pointers: Query<&PointerLocation>,
     selectables: Query<(Entity, &PickSelection)>,
 ) {
@@ -157,7 +197,7 @@ fn on_escape_pressed(
 
         for (entity, selection) in selectables.iter() {
             if selection.is_selected {
-                deselections.send(PointerEvent::new(
+                deselections.send(Pointer::new(
                     PointerId::Custom(Uuid::default()),
                     pointer_location.clone(),
                     entity,
@@ -167,6 +207,19 @@ fn on_escape_pressed(
         }
     }
 }
+
+fn on_build_pressed(
+    keyboard_input: Res<Input<KeyCode>>,
+    mut deselections: EventWriter<Pointer<Deselect>>,
+    pointers: Query<&PointerLocation>,
+    selectables: Query<(Entity, &PickSelection)>,
+) {
+    if keyboard_input.just_pressed(KeyCode::B) {
+        // get pointer location
+
+    }
+}
+
 //Change Camera projection on pressing TAB
 fn toggle_camera_projection(
     keyboard_input: Res<Input<KeyCode>>,
@@ -212,3 +265,12 @@ fn toggle_camera_projection(
         *_projection = new_pr;
     }
 }
+
+/// Drawn meshes will be created with [`PolygonalMesh`] component.
+pub fn handle_polygonal_mesh_add(query: Query<Entity, Added<PolygonalMesh>>) {
+    for entity in query.iter() {
+        // Use the created mesh here...
+        info!("Created polygonal mesh: {:?}", entity);
+    }
+}
+
